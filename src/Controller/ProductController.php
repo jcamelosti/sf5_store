@@ -24,7 +24,15 @@ class ProductController extends AbstractController
         ]);
     }
 
-    
+    #[Route('/{productId}', name: 'show', methods: "GET")]
+    public function show($productId)
+    {
+        $product = $this->doctrine->getRepository(Product::class)->find($productId);
+
+        return $this->json([
+            'data' => $product
+        ]);
+    }
 
     #[Route('/', name: 'create', methods: "POST")]
     public function create(Request $request){
@@ -73,6 +81,19 @@ class ProductController extends AbstractController
 
         return $this->json([
             'message' => 'Produto Atualizado com Sucesso!',
+        ]);
+    }
+
+    #[Route('/{productId}', name: 'remove', methods: ["DELETE"])]
+    public function remove($productId){
+        $manager = $this->doctrine->getManager();
+        $product = $this->doctrine->getRepository(Product::class)->find($productId);
+        
+        $manager->remove($product);
+        $manager->flush();         
+        
+        return $this->json([
+            'message' => 'Produto Removido com Sucesso!',
         ]);
     }
 }
