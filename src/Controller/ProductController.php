@@ -7,6 +7,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 use Doctrine\Persistence\ManagerRegistry;
+use Symfony\Component\HttpFoundation\Request;
 
 #[Route('/products', name: 'products_')]
 class ProductController extends AbstractController
@@ -16,21 +17,28 @@ class ProductController extends AbstractController
     #[Route('/', name: 'index', methods: "GET")]
     public function index()
     {
+        $products = $this->doctrine->getRepository(Product::class)->findAll();
+
         return $this->json([
-            'message' => 'Welcome to your new controller!',
-            'path' => 'src/Controller/ProductController.php',
+            'data' => $products
         ]);
     }
 
+    
+
     #[Route('/', name: 'create', methods: "POST")]
-    public function create(){
+    public function create(Request $request){
+        $productData = $request->request->all();
+
         $product = new Product();
-        $product->setName('Primeiro Produto');
-        $product->setDescription('');
-        $product->setSlug('primeiro-produto');
+        
+        $product->setName($productData['name']);
+        $product->setDescription($productData['description']);
+        $product->setSlug($productData['slug']);
         $product->setIsActive(true);
-        $product->setContent('Conteudo Produto 1');
-        $product->setPrice(1999);
+        $product->setContent($productData['content']);
+        $product->setPrice($productData['price']);
+
         $product->setCreatedAt(new \DateTime('now', new \DateTimeZone('America/Sao_Paulo')));
         $product->setUpdatedAt(new \DateTime('now', new \DateTimeZone('America/Sao_Paulo')));
 
@@ -41,6 +49,30 @@ class ProductController extends AbstractController
 
         return $this->json([
             'message' => 'Produto Criado com Sucesso!',
+        ]);
+    }
+
+    #[Route('/{productId}', name: 'update', methods: ["PUT","PATCH"])]
+    public function update(Request $request, $productId){
+        $productData = $request->request->all();
+        $manager = $this->doctrine->getManager();
+
+        $product = $this->doctrine->getRepository(Product::class)->find($productId);
+        
+        $product->setName($productData['name']);
+        $product->setDescription($productData['description']);
+        $product->setSlug($productData['slug']);
+        //$product->setIsActive(true);
+        $product->setContent($productData['content']);
+        $product->setPrice($productData['price']);
+
+        //$product->setCreatedAt(new \DateTime('now', new \DateTimeZone('America/Sao_Paulo')));
+        $product->setUpdatedAt(new \DateTime('now', new \DateTimeZone('America/Sao_Paulo')));
+
+        $manager->flush();
+
+        return $this->json([
+            'message' => 'Produto Atualizado com Sucesso!',
         ]);
     }
 }
